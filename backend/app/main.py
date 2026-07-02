@@ -28,7 +28,7 @@ def startup_event():
                 db,
                 model_name="SMOTE Random Forest Classifier",
                 version="1.0.0",
-                filepath="/Users/NIRAJKUMAR/Desktop/Fraud_Detection/backend/app/ml/fraud_model.joblib",
+                filepath="app/ml/fraud_model.joblib",
                 precision=1.0000,
                 recall=0.8667,
                 f1_score=0.9286,
@@ -195,9 +195,15 @@ def predict_batch_csv(
     fraud_ratio = fraud_count / total_processed if total_processed > 0 else 0.0
 
     # Save uploaded file details to database & disk
-    upload_dir = "/Users/NIRAJKUMAR/Desktop/Fraud_Detection/backend/uploaded_files"
-    os.makedirs(upload_dir, exist_ok=True)
-    saved_file_path = os.path.join(upload_dir, f"{datetime.utcnow().timestamp()}_{file.filename}")
+    from pathlib import Path
+
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    upload_dir = BASE_DIR / "uploaded_files"
+
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    saved_file_path = upload_dir / f"{datetime.utcnow().timestamp()}_{file.filename}"
+
     try:
         with open(saved_file_path, "wb") as f:
             f.write(contents)
@@ -205,7 +211,7 @@ def predict_batch_csv(
         crud.create_uploaded_file(
             db, 
             filename=file.filename, 
-            filepath=saved_file_path, 
+            filepath=str(saved_file_path), 
             record_count=total_processed, 
             fraud_count=fraud_count, 
             user_id=current_user.id
