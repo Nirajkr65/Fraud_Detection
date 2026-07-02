@@ -7,7 +7,7 @@ from datetime import datetime
 from eda import render_eda
 
 # Load API URL from Environment Variable (Fallback to localhost for dev)
-API_URL = os.getenv("API_URL", "http://localhost:8000")
+API_URL = os.getenv("API_URL", "https://fraud-detection-1-tutc.onrender.com")
 
 st.set_page_config(page_title="Fraud Guard - AI Fraud Detection", layout="wide")
 
