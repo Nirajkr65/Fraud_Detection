@@ -3,8 +3,12 @@ import pandas as pd
 import joblib
 import os
 
-PREPROCESSOR_PATH = "/Users/NIRAJKUMAR/Desktop/Fraud_Detection/backend/app/ml/preprocessor.joblib"
-MODEL_PATH = "/Users/NIRAJKUMAR/Desktop/Fraud_Detection/backend/app/ml/fraud_model.joblib"
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+
+PREPROCESSOR_PATH = BASE_DIR / "preprocessor.joblib"
+MODEL_PATH = BASE_DIR / "fraud_model.joblib"
 
 class FraudModel:
     def __init__(self):
@@ -14,9 +18,9 @@ class FraudModel:
         self.load()
 
     def load(self):
-        if os.path.exists(PREPROCESSOR_PATH) and os.path.exists(MODEL_PATH):
-            self.preprocessor = joblib.load(PREPROCESSOR_PATH)
-            self.model = joblib.load(MODEL_PATH)
+        if PREPROCESSOR_PATH.exists() and MODEL_PATH.exists():
+            self.preprocessor = joblib.load(str(PREPROCESSOR_PATH))
+            self.model = joblib.load(str(MODEL_PATH))
             self.is_loaded = True
             print("Production ML model and preprocessor loaded successfully.")
         else:
