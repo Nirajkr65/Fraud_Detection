@@ -50,8 +50,10 @@ def get_auth_headers():
 
 def handle_api_error(e):
     if isinstance(e, requests.exceptions.ConnectionError):
+        secrets_keys = list(st.secrets.keys()) if hasattr(st, "secrets") else []
         st.error(f"🔌 **Connection Error**: Unable to connect to the backend server at `{API_URL}`. "
-                 f"Please ensure the FastAPI service is running. Run: `uvicorn backend.app.main:app --reload --port 8000`")
+                 f"Please ensure the FastAPI service is running. Run: `uvicorn backend.app.main:app --reload --port 8000` "
+                 f"\n\n*Debug Info: st.secrets keys detected: {secrets_keys}*")
     elif isinstance(e, requests.exceptions.Timeout):
         st.error("⏳ **Timeout Error**: The request timed out. Please try again.")
     else:
