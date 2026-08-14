@@ -10,8 +10,11 @@ from eda import render_eda
 # Load environment variables from .env file
 load_dotenv()
 
-# Load API URL from Environment Variable (Fallback to localhost for dev)
-API_URL = os.getenv("API_URL", "http://localhost:8000")
+# Load API URL (Check Streamlit secrets first, then environment variable, fallback to localhost)
+if "API_URL" in st.secrets:
+    API_URL = st.secrets["API_URL"]
+else:
+    API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 st.set_page_config(page_title="Fraud Guard - AI Fraud Detection", layout="wide")
 
