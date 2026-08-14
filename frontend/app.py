@@ -4,10 +4,14 @@ import pandas as pd
 import plotly.express as px
 import os
 from datetime import datetime
+from dotenv import load_dotenv
 from eda import render_eda
 
+# Load environment variables from .env file
+load_dotenv()
+
 # Load API URL from Environment Variable (Fallback to localhost for dev)
-API_URL = os.getenv("API_URL", "https://fraud-detection-1-tutc.onrender.com")
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 st.set_page_config(page_title="Fraud Guard - AI Fraud Detection", layout="wide")
 

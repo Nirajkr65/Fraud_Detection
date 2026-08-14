@@ -1,0 +1,26 @@
+{
+    "baseline_model": {
+        "precision": 1.0,
+        "recall": 0.8333333333333334,
+        "f1_score": 0.9090909090909091,
+        "roc_auc": 1.0,
+        "confusion_matrix": {
+            "tn": 1970,
+            "fp": 0,
+            "fn": 5,
+            "tp": 25
+        }
+    },
+    "smote_model": {
+        "precision": 1.0,
+        "recall": 0.8666666666666667,
+        "f1_score": 0.9285714285714286,
+        "roc_auc": 0.9997884940778341,
+        "confusion_matrix": {
+            "tn": 1970,
+            "fp": 0,
+            "fn": 4,
+            "tp": 26
+        }
+    }
+}

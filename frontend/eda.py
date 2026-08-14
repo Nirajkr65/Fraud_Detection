@@ -3,8 +3,10 @@ import pandas as pd
 import plotly.express as px
 import plotly.figure_factory as ff
 import numpy as np
+from pathlib import Path
 
-DATA_PATH = "/Users/NIRAJKUMAR/Desktop/Fraud_Detection/fraud_dataset.csv"
+# Define path relative to frontend script location
+DATA_PATH = Path(__file__).resolve().parents[1] / "fraud_dataset.csv"
 
 @st.cache_data
 def load_data():

@@ -1,0 +1,97 @@
+================================================================================
+                    UNDERSTANDING THE AI FRAUD DETECTION SYSTEM
+================================================================================
+
+This project is a complete, production-ready AI-powered Fraud Detection System. 
+It monitors transactions in real-time, predicts if they are normal or fraudulent 
+using a machine learning model, saves all transactions to a database, and provides 
+an interactive dashboard for security analysts.
+
+--------------------------------------------------------------------------------
+1. TECH STACK (THE TECHNOLOGIES USED)
+--------------------------------------------------------------------------------
+The project is built using a modern Python-based technology stack:
+
+* BACKEND (API Server):
+  - FastAPI: A super-fast, modern web framework for building APIs with Python.
+  - Uvicorn: A lightning-fast server that runs the FastAPI application.
+  - python-dotenv: Loads configuration and secret keys securely from a .env file.
+
+* DATABASE (Storage):
+  - SQLite: A lightweight, file-based database that stores users, transactions,
+    upload histories, and model information.
+  - SQLAlchemy: An Object-Relational Mapper (ORM). It allows Python code to 
+    talk to the SQL database using Python classes instead of writing raw SQL queries.
+
+* MACHINE LEARNING (The AI Brain):
+  - Scikit-learn: The industry standard library for machine learning in Python. 
+    It is used to preprocess data and train the Random Forest Classifier.
+  - Imbalanced-learn (SMOTE): Used to handle "class imbalance" (when we have 
+    lots of normal transactions but very few fraud cases).
+  - Joblib: Saves and loads the trained ML model and preprocessor to disk.
+
+* FRONTEND (User Interface):
+  - Streamlit: A framework that turns Python scripts into interactive web apps
+    instantly. It provides the dashboard, charts, forms, and tables.
+  - Plotly: Creates interactive and responsive graphs (pie charts, bar charts,
+    line charts, and scatter plots) for the dashboard.
+  - Requests: Sends HTTP calls from Streamlit to the FastAPI backend.
+
+--------------------------------------------------------------------------------
+2. SYSTEM ARCHITECTURE & DATA FLOW
+--------------------------------------------------------------------------------
+The system is split into three main layers:
+
+  [Streamlit Frontend]  <---(API Requests / JWT Token)--->  [FastAPI Backend]
+                                                                  |
+                                              +-------------------+-------------------+
+                                              |                                       |
+                                     (Database Queries)                      (Run Inference)
+                                              |                                       |
+                                    [SQLite Database]                      [Scikit-learn Model]
+
+* User Action: The user interacts with Streamlit (logs in, enters transaction details).
+* API Communication: Streamlit sends a request to FastAPI (secured with a JWT Token).
+* Backend processing:
+  1. FastAPI validates the user's login token.
+  2. For predictions, FastAPI feeds the transaction details to the ML Model.
+  3. The model returns the fraud probability (0% to 100%) and a yes/no prediction.
+  4. FastAPI saves this transaction history to the SQLite database.
+  5. FastAPI sends the result back to Streamlit, which displays it on the screen.
+
+--------------------------------------------------------------------------------
+3. THE MACHINE LEARNING MODEL PIPELINE
+--------------------------------------------------------------------------------
+Fraud detection is challenging because 99% of transactions are normal, and only 
+about 1% are fraud (called "class imbalance"). If we train a model on this directly, 
+it might just learn to say "no fraud" to everything and still be 99% accurate!
+
+To solve this, we use a two-step pipeline:
+
+* Preprocessing:
+  - Numeric columns (amount, age, etc.) are cleaned of missing values (Imputer) 
+    and scaled (StandardScaler) so big numbers don't confuse the model.
+  - Categorical columns (merchant category) are converted to numbers (OneHotEncoder).
+  - These steps are saved in "preprocessor.joblib".
+
+* SMOTE Resampling & Random Forest:
+  - We apply SMOTE (Synthetic Minority Over-sampling Technique) to create fake 
+    fraud examples in the training data so that both classes (0 and 1) are balanced.
+  - We then train a Random Forest Classifier (an ensemble of decision trees) 
+    on the balanced data.
+  - The final trained model is saved as "fraud_model.joblib".
+
+--------------------------------------------------------------------------------
+4. DIRECTORY STRUCTURE
+--------------------------------------------------------------------------------
+* backend/app/main.py: The main FastAPI entry point containing endpoints.
+* backend/app/auth.py: Handles user passwords, password hashing, and JWT tokens.
+* backend/app/database.py: Connects to the SQLite database.
+* backend/app/models.py: Defines database tables (Users, Transactions, etc.).
+* backend/app/crud.py: Helper functions to create/read records in the database.
+* backend/app/ml/prepare_data.py: Pipeline to preprocess raw CSV data.
+* backend/app/ml/train.py: Pipeline to apply SMOTE, train the model, and save metrics.
+* backend/app/ml/model.py: Wrapper class that loads model files and predicts.
+* frontend/app.py: Streamlit dashboard and prediction forms.
+* frontend/eda.py: Interactive graphs analyzing the transaction dataset.
+* .env: Stores secret keys, database paths, and connection URLs.

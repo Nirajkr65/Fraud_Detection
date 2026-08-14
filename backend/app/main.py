@@ -7,37 +7,57 @@ import io
 import os
 from datetime import datetime
 
-from .database import engine, Base, get_db
+from .database import engine, Base, get_db, SessionLocal
 from . import crud, schemas, auth, models
 from .ml.model import fraud_detector
+from contextlib import asynccontextmanager
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="AI Fraud Detection System API", version="1.2.0")
-
-# Startup database initialization
-@app.on_event("startup")
-def startup_event():
-    db = next(get_db())
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup database initialization
+    db = SessionLocal()
     try:
         active_model = crud.get_active_model_info(db)
         if not active_model:
+            # Dynamically read metrics if they exist
+            metrics_path = os.path.join(os.path.dirname(__file__), "ml", "metrics.json")
+            precision, recall, f1_score, roc_auc = 1.0000, 0.8667, 0.9286, 0.9998
+            if os.path.exists(metrics_path):
+                try:
+                    import json
+                    with open(metrics_path, "r") as f:
+                        metrics_data = json.load(f)
+                    smote_metrics = metrics_data.get("smote_model", {})
+                    precision = smote_metrics.get("precision", precision)
+                    recall = smote_metrics.get("recall", recall)
+                    f1_score = smote_metrics.get("f1_score", f1_score)
+                    roc_auc = smote_metrics.get("roc_auc", roc_auc)
+                except Exception as ex:
+                    print(f"Failed to read dynamic metrics for startup registration: {ex}")
+
             # Register our trained SMOTE RF model details in the database
             crud.create_model_info(
                 db,
                 model_name="SMOTE Random Forest Classifier",
                 version="1.0.0",
                 filepath="app/ml/fraud_model.joblib",
-                precision=1.0000,
-                recall=0.8667,
-                f1_score=0.9286,
-                roc_auc=0.9998,
+                precision=precision,
+                recall=recall,
+                f1_score=f1_score,
+                roc_auc=roc_auc,
                 status="active"
             )
             print("Default active model details registered in database successfully.")
     except Exception as e:
         print(f"Startup DB init failed: {e}")
+    finally:
+        db.close()
+    yield
+
+app = FastAPI(title="AI Fraud Detection System API", version="1.2.0", lifespan=lifespan)
 
 
 # --- AUTH ENDPOINTS ---
@@ -155,15 +175,15 @@ def predict_batch_csv(
     fraud_count = 0
     normal_count = 0
 
-    for idx, row in df.iterrows():
+    for i, (idx, row) in enumerate(df.iterrows()):
         tx_id = str(row["transaction_id"])
         # Check if transaction_id exists to avoid duplicate constraint errors
         existing_tx = crud.get_transaction(db, tx_id)
         if existing_tx:
             continue
 
-        is_f = bool(preds[idx])
-        score = float(probs[idx])
+        is_f = bool(preds[i])
+        score = float(probs[i])
 
         if is_f:
             fraud_count += 1
@@ -232,7 +252,17 @@ def predict_batch_csv(
 
 @app.get("/metrics")
 def get_model_metrics():
-    # Return metrics calculated during our model evaluation stage
+    # Try to load metrics dynamically from the train evaluation output
+    metrics_path = os.path.join(os.path.dirname(__file__), "ml", "metrics.json")
+    if os.path.exists(metrics_path):
+        try:
+            import json
+            with open(metrics_path, "r") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Failed to read dynamic metrics from json: {e}")
+            
+    # Return fallback metrics calculated during our model evaluation stage
     return {
         "baseline_model": {
             "precision": 1.0,

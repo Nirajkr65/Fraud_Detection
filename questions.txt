@@ -1,0 +1,118 @@
+================================================================================
+           INTERVIEW QUESTIONS & EASY SOLUTIONS - FRAUD DETECTION SYSTEM
+================================================================================
+
+This file contains common interview questions about this project, with answers 
+written in very simple, easy-to-understand language.
+
+--------------------------------------------------------------------------------
+Q1: What is this project, and what does it do?
+--------------------------------------------------------------------------------
+Answer:
+It is an AI-powered Fraud Detection System. It has two main parts:
+1. A website interface (Frontend) where users can log in, check if a single 
+   transaction is fraudulent, or upload a CSV file to check thousands of 
+   transactions at once.
+2. A server (Backend) that uses a Machine Learning model (AI) to check the 
+   transactions for fraud, and saves all details inside a database.
+
+--------------------------------------------------------------------------------
+Q2: What is the Tech Stack (technologies) used in this project?
+--------------------------------------------------------------------------------
+Answer:
+* Frontend (User Interface): Streamlit (for building interactive web pages 
+  using Python) and Plotly (for charts).
+* Backend (Server API): FastAPI (a fast web framework) and Uvicorn (to run the server).
+* Database: SQLite (to store data in a simple file) and SQLAlchemy (to communicate 
+  with the database using Python).
+* Machine Learning: Scikit-learn (to build the AI model) and Imbalanced-learn 
+  (SMOTE) to balance the data.
+
+--------------------------------------------------------------------------------
+Q3: What is "Class Imbalance" and why is it a problem in fraud detection?
+--------------------------------------------------------------------------------
+Answer:
+Class imbalance means one group of data is much larger than another. In fraud 
+detection, 99% of transactions are normal (not fraud), and only 1% are fraud. 
+If we train the AI on this data directly, the AI will learn a lazy shortcut: it 
+will say "Normal" to every transaction and still get 99% accuracy! But it will 
+fail to catch any actual fraud.
+
+--------------------------------------------------------------------------------
+Q4: What is SMOTE and how does it solve Class Imbalance?
+--------------------------------------------------------------------------------
+Answer:
+SMOTE stands for Synthetic Minority Over-sampling Technique. 
+Think of it like this: if you have only 10 pictures of fraud but 1,000 pictures 
+of normal transactions, the AI won't learn what fraud looks like. SMOTE solves 
+this by looking at the 10 fraud pictures and automatically generating synthetic 
+(fake but realistic) fraud data points until you have an equal amount of normal 
+and fraud data (e.g., 1,000 of each). This lets the AI learn both patterns equally.
+
+--------------------------------------------------------------------------------
+Q5: What is a Random Forest Classifier and why is it used here?
+--------------------------------------------------------------------------------
+Answer:
+A Decision Tree is like a flow chart: "Is amount > $1000? Yes/No -> Is age < 25? 
+Yes/No." 
+A Random Forest is a collection of many different Decision Trees (a "forest"). 
+When you check a transaction, every tree votes on whether it is "Fraud" or "Normal". 
+The majority vote wins. We use it because it is highly accurate, handles complex 
+data well, and does not easily make mistakes (overfitting).
+
+--------------------------------------------------------------------------------
+Q6: How does the frontend talk to the backend securely? (Authentication)
+--------------------------------------------------------------------------------
+Answer:
+Security is handled using JWT (JSON Web Tokens):
+1. The user enters their username and password on the Streamlit website.
+2. The website sends them to the FastAPI server.
+3. The server checks the database, hashes the password to verify, and returns 
+   a secure keycard (JWT Access Token) to the frontend.
+4. For all future actions (like checking transactions), the frontend attaches 
+   this keycard to its requests. If the keycard is valid, the server processes 
+   the request.
+
+--------------------------------------------------------------------------------
+Q7: What is SQLAlchemy and why do we use it instead of raw SQL queries?
+--------------------------------------------------------------------------------
+Answer:
+SQLAlchemy is an Object-Relational Mapper (ORM). 
+Instead of writing database queries in raw SQL text (like `SELECT * FROM users`), 
+SQLAlchemy lets us treat database tables like normal Python classes. For example, 
+to get a user, we just write `db.query(User).filter(User.username == name).first()`. 
+It makes the code clean, prevents errors, and protects the system from database 
+hackers (SQL injection attacks).
+
+--------------------------------------------------------------------------------
+Q8: What is a .env file and why did we put settings there?
+--------------------------------------------------------------------------------
+Answer:
+A `.env` file stands for "environment configuration". It is a plain text file 
+where we store passwords, database paths, and secret keys outside of our source 
+code. 
+We do this for two reasons:
+1. **Security**: We do not want to hardcode secret passwords in our code files 
+   because if we upload our code to GitHub, anyone can see our secrets.
+2. **Flexibility**: We can change database locations or API ports easily by just 
+   editing the `.env` file, without modifying any Python code.
+
+--------------------------------------------------------------------------------
+Q9: What were the main bugs or issues you fixed in this codebase?
+--------------------------------------------------------------------------------
+Answer:
+I fixed several critical bugs to make the project stable and portable:
+1. **Hardcoded Paths**: The ML training and data scripts had hardcoded folder 
+   paths specific to the original developer's computer. I replaced them with 
+   dynamic paths (`pathlib.Path`) so the project runs on *any* computer.
+2. **Batch Upload Crash**: The batch prediction loop crashed if an uploaded CSV 
+   had custom or non-sequential row indexes. I fixed it by using `enumerate()` 
+   to correctly align the rows to the AI predictions.
+3. **Database Session Leaks**: The system opened a database connection on startup 
+   but never closed it, which drains memory. I wrapped it in a `try...finally` 
+   block to ensure the connection always closes safely.
+4. **Deprecated Hooks**: Replaced deprecated FastAPI startup events with the 
+   modern `lifespan` manager context.
+5. **Hardcoded Metrics**: The metrics dashboard was showing static text numbers. 
+   I modified the training script to export real metrics to `metrics.json` and 
+   made the API serve them dynamically.

@@ -8,10 +8,13 @@ from sklearn.impute import SimpleImputer
 import joblib
 import os
 
-# Define paths
-DATA_PATH = "/Users/NIRAJKUMAR/Desktop/Fraud_Detection/fraud_dataset.csv"
-PREPROCESSOR_PATH = "/Users/NIRAJKUMAR/Desktop/Fraud_Detection/backend/app/ml/preprocessor.joblib"
-PROCESSED_DATA_DIR = "/Users/NIRAJKUMAR/Desktop/Fraud_Detection/backend/app/ml/processed_data"
+from pathlib import Path
+
+# Define paths relative to script location
+BASE_DIR = Path(__file__).resolve().parents[3]
+DATA_PATH = BASE_DIR / "fraud_dataset.csv"
+PREPROCESSOR_PATH = Path(__file__).resolve().parent / "preprocessor.joblib"
+PROCESSED_DATA_DIR = Path(__file__).resolve().parent / "processed_data"
 
 def build_and_save_pipeline():
     # Load dataset
@@ -62,16 +65,16 @@ def build_and_save_pipeline():
     X_test_processed = preprocessor.transform(X_test)
     
     # Save the fitted preprocessor
-    os.makedirs(os.path.dirname(PREPROCESSOR_PATH), exist_ok=True)
+    PREPROCESSOR_PATH.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(preprocessor, PREPROCESSOR_PATH)
     print(f"Preprocessor successfully saved to: {PREPROCESSOR_PATH}")
     
     # Save processed data split for subsequent training step
-    os.makedirs(PROCESSED_DATA_DIR, exist_ok=True)
-    np.save(os.path.join(PROCESSED_DATA_DIR, "X_train.npy"), X_train_processed)
-    np.save(os.path.join(PROCESSED_DATA_DIR, "X_test.npy"), X_test_processed)
-    y_train.to_csv(os.path.join(PROCESSED_DATA_DIR, "y_train.csv"), index=False)
-    y_test.to_csv(os.path.join(PROCESSED_DATA_DIR, "y_test.csv"), index=False)
+    PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    np.save(PROCESSED_DATA_DIR / "X_train.npy", X_train_processed)
+    np.save(PROCESSED_DATA_DIR / "X_test.npy", X_test_processed)
+    y_train.to_csv(PROCESSED_DATA_DIR / "y_train.csv", index=False)
+    y_test.to_csv(PROCESSED_DATA_DIR / "y_test.csv", index=False)
     print(f"Processed train and test data splits saved to: {PROCESSED_DATA_DIR}")
 
 if __name__ == "__main__":

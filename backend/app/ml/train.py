@@ -2,20 +2,22 @@ import numpy as np
 import pandas as pd
 import joblib
 import os
+from pathlib import Path
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix
 from imblearn.over_sampling import SMOTE
 
 # Define paths
-PROCESSED_DATA_DIR = "/Users/NIRAJKUMAR/Desktop/Fraud_Detection/backend/app/ml/processed_data"
-MODEL_PATH = "/Users/NIRAJKUMAR/Desktop/Fraud_Detection/backend/app/ml/fraud_model.joblib"
+PROCESSED_DATA_DIR = Path(__file__).resolve().parent / "processed_data"
+MODEL_PATH = Path(__file__).resolve().parent / "fraud_model.joblib"
+METRICS_PATH = Path(__file__).resolve().parent / "metrics.json"
 
 def train_and_compare():
     # Load processed data
-    X_train = np.load(os.path.join(PROCESSED_DATA_DIR, "X_train.npy"))
-    X_test = np.load(os.path.join(PROCESSED_DATA_DIR, "X_test.npy"))
-    y_train = pd.read_csv(os.path.join(PROCESSED_DATA_DIR, "y_train.csv"))["is_fraud"].values
-    y_test = pd.read_csv(os.path.join(PROCESSED_DATA_DIR, "y_test.csv"))["is_fraud"].values
+    X_train = np.load(PROCESSED_DATA_DIR / "X_train.npy")
+    X_test = np.load(PROCESSED_DATA_DIR / "X_test.npy")
+    y_train = pd.read_csv(PROCESSED_DATA_DIR / "y_train.csv")["is_fraud"].values
+    y_test = pd.read_csv(PROCESSED_DATA_DIR / "y_test.csv")["is_fraud"].values
 
     print("Training dataset shape:", X_train.shape)
     print("Fraud count in train set:", int(np.sum(y_train)), f"({np.sum(y_train)/len(y_train)*100:.2f}%)")
@@ -76,6 +78,38 @@ def train_and_compare():
     # Save the SMOTE RF model as our production fraud detection classifier
     joblib.dump(rf_smote, MODEL_PATH)
     print(f"Production model (SMOTE RF) saved to: {MODEL_PATH}")
+
+    # Save metrics dynamically to metrics.json
+    import json
+    metrics = {
+        "baseline_model": {
+            "precision": float(p_base),
+            "recall": float(r_base),
+            "f1_score": float(f1_base),
+            "roc_auc": float(auc_base),
+            "confusion_matrix": {
+                "tn": int(cm_base[0, 0]),
+                "fp": int(cm_base[0, 1]),
+                "fn": int(cm_base[1, 0]),
+                "tp": int(cm_base[1, 1])
+            }
+        },
+        "smote_model": {
+            "precision": float(p_smote),
+            "recall": float(r_smote),
+            "f1_score": float(f1_smote),
+            "roc_auc": float(auc_smote),
+            "confusion_matrix": {
+                "tn": int(cm_smote[0, 0]),
+                "fp": int(cm_smote[0, 1]),
+                "fn": int(cm_smote[1, 0]),
+                "tp": int(cm_smote[1, 1])
+            }
+        }
+    }
+    with open(METRICS_PATH, "w") as f:
+        json.dump(metrics, f, indent=4)
+    print(f"Model metrics saved to: {METRICS_PATH}")
 
 if __name__ == "__main__":
     train_and_compare()
